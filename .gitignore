@@ -1,0 +1,25 @@
+# Environments
+.env
+venv/
+env/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Flask Instance folder
+instance/
+
+# Uploads
+uploads/*
+!uploads/.gitkeep
+
+# IDEs and OS files
+.vscode/
+.idea/
+.DS_Store
+*.sqlite3
+farmassist.db

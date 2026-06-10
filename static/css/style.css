@@ -1,0 +1,91 @@
+/* Modern Agriculture Theme Variables */
+:root {
+    --primary-green: #2ecc71;
+    --dark-green: #27ae60;
+    --light-green: #e8f8f5;
+    --accent-color: #f1c40f;
+    --text-dark: #2c3e50;
+    --text-light: #7f8c8d;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+    background-color: #f8f9fa;
+}
+
+/* Navbar */
+.bg-success {
+    background-color: var(--dark-green) !important;
+}
+
+.navbar-brand {
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: white;
+    border-right: 1px solid #e9ecef;
+}
+
+.sidebar .nav-link {
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+}
+
+.sidebar .nav-link:hover {
+    background-color: var(--light-green);
+    color: var(--dark-green) !important;
+}
+
+.sidebar .nav-link.active {
+    background-color: var(--light-green);
+    color: var(--dark-green) !important;
+    border-left: 4px solid var(--dark-green);
+}
+
+/* Cards */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.shadow:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+}
+
+.btn-success {
+    background-color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.btn-success:hover {
+    background-color: var(--dark-green);
+    border-color: var(--dark-green);
+}
+
+.btn-outline-success {
+    color: var(--primary-green);
+    border-color: var(--primary-green);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--primary-green);
+    color: white;
+}
+
+/* Tables */
+.table th {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* Badge */
+.bg-success {
+    background-color: var(--primary-green) !important;
+}

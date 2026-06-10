@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Detail Analisis - FarmAssist AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2">Detail Analisis Tanaman</h1>
+    <a href="{{ url_for('user.history') }}" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+</div>
+
+<div class="row">
+    <div class="col-md-5 mb-4">
+        <div class="card shadow border-0 h-100">
+            <div class="card-header bg-white fw-bold">
+                <i class="fa-solid fa-info-circle text-success"></i> Informasi Input
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless">
+                    <tr>
+                        <th width="35%" class="text-muted">Nama Tanaman</th>
+                        <td class="fw-bold">{{ consultation.plant_name }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Tanggal</th>
+                        <td>{{ consultation.created_at.strftime('%d %B %Y, %H:%M') }}</td>
+                    </tr>
+                </table>
+                
+                <h6 class="text-muted mt-3 mb-2">Gejala Dilaporkan:</h6>
+                <div class="p-3 bg-light rounded border">
+                    {{ consultation.symptoms }}
+                </div>
+                
+                {% if consultation.image_url %}
+                <h6 class="text-muted mt-4 mb-2">Foto Tanaman:</h6>
+                <div class="text-center bg-light p-2 rounded border">
+                    <!-- Note: In a real app we need a route to serve uploaded files -->
+                    <!-- For simplicity, assume uploads is served via a static route or similar if configured in app.py -->
+                    <span class="badge bg-secondary">File ID: {{ consultation.image_url }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-7 mb-4">
+        <div class="card shadow border-0 border-top border-success border-4 h-100">
+            <div class="card-header bg-white fw-bold d-flex align-items-center">
+                <i class="fa-solid fa-robot text-success fa-lg me-2"></i> Hasil Analisis Pakar AI
+            </div>
+            <div class="card-body" style="white-space: pre-wrap; line-height: 1.6;">
+                {{ consultation.ai_result }}
+            </div>
+            <div class="card-footer bg-light text-muted small text-center">
+                <i class="fa-solid fa-triangle-exclamation"></i> Hasil ini merupakan analisis AI. Disarankan untuk tetap mengkonfirmasi dengan penyuluh pertanian setempat untuk penanganan skala besar.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

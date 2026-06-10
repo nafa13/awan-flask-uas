@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Riwayat Konsultasi - FarmAssist AI{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2">Riwayat Konsultasi</h1>
+</div>
+
+<div class="card shadow border-0">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-success text-white">
+                    <tr>
+                        <th width="15%">Tanggal</th>
+                        <th width="20%">Tanaman</th>
+                        <th width="40%">Gejala Singkat</th>
+                        <th width="25%" class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in consultations %}
+                    <tr>
+                        <td class="align-middle">{{ item.created_at.strftime('%d %b %Y') }}<br><small class="text-muted">{{ item.created_at.strftime('%H:%M') }}</small></td>
+                        <td class="align-middle fw-bold">{{ item.plant_name }}</td>
+                        <td class="align-middle">{{ item.symptoms[:80] }}{% if item.symptoms|length > 80 %}...{% endif %}</td>
+                        <td class="align-middle text-center">
+                            <a href="{{ url_for('user.detail', consultation_id=item.id) }}" class="btn btn-sm btn-outline-success">
+                                <i class="fa-solid fa-eye"></i> Detail Hasil AI
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fa-solid fa-folder-open fa-3x mb-3"></i>
+                                <h5>Belum ada riwayat konsultasi</h5>
+                                <p>Anda belum pernah melakukan konsultasi dengan AI kami.</p>
+                                <a href="{{ url_for('user.consult') }}" class="btn btn-success mt-2">Mulai Konsultasi</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

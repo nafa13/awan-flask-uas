@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Login - FarmAssist AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow border-0 rounded-lg">
+            <div class="card-header bg-success text-white text-center py-3">
+                <h4 class="mb-0"><i class="fa-solid fa-user-lock"></i> Login ke FarmAssist</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email" required placeholder="Masukkan email">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required placeholder="Masukkan password">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Login</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <p class="mb-0">Belum punya akun? <a href="{{ url_for('auth.register') }}" class="text-success fw-bold">Daftar di sini</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

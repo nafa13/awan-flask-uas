@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Register - FarmAssist AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow border-0 rounded-lg">
+            <div class="card-header bg-success text-white text-center py-3">
+                <h4 class="mb-0"><i class="fa-solid fa-user-plus"></i> Daftar Akun Baru</h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nama Lengkap</label>
+                        <input type="text" class="form-control" id="name" name="name" required placeholder="Masukkan nama Anda">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" name="email" required placeholder="Masukkan email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" required placeholder="Buat password">
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirm_password" class="form-label">Konfirmasi Password</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required placeholder="Ketik ulang password">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Register</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <p class="mb-0">Sudah punya akun? <a href="{{ url_for('auth.login') }}" class="text-success fw-bold">Login di sini</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
