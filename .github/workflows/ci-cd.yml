@@ -42,7 +42,7 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest .
         docker push ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest
 
-  # TAHAP 5: DEPLOY OTOMATIS VIA JUMP HOST (Menggunakan Kompresi Gzip)
+  # TAHAP 5: DEPLOY OTOMATIS VIA JUMP HOST (Menggunakan Kompresi Gzip & Optimalisasi Storage)
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -62,14 +62,16 @@ jobs:
 
           echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+          # 🟢 OPTIMASI FRONTEND: Tarik image matang, beri TAG lokal, jalankan TANPA --build agar storage EC2 tidak jebol
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/farmassist_frontend:latest
-          sudo docker compose up -d --build frontend
+          sudo docker tag ${{ secrets.DOCKER_USERNAME }}/farmassist_frontend:latest farmassist_frontend_image:latest
+          sudo docker compose up -d frontend
 
           echo "==== TRANSFER IMAGE BACKEND LEWAT INTERNAL VPC PEERING ===="
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest
           sudo docker tag ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest farmassist_backend_image:latest
 
-          # 🟢 OPTIMASI: Kompres langsung ke .tar.gz (Ukuran menyusut 60%+, hemat disk Frontend!)
+          # OPTIMASI BACKEND: Kompres langsung ke .tar.gz (Ukuran menyusut 60%+, hemat disk Frontend!)
           sudo docker save farmassist_backend_image:latest | gzip > farmassist_backend.tar.gz
           sudo chown ubuntu:ubuntu farmassist_backend.tar.gz
           
@@ -77,7 +79,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem farmassist_backend.tar.gz ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
-          # 🟢 FIX UJUNG SCRIPT: Ditambahkan 'backend db' di akhir compose up agar server privat fokus merakit cluster internal saja
+          # OPTIMASI: Ekstrak langsung di udara saat load (gunzip -c) agar hemat space di server Backend
           ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
           touch .env && \
           sed -i '/R2_/d' .env && \
