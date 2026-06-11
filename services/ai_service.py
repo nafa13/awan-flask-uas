@@ -58,7 +58,8 @@ Gejala: {symptoms}"""
                     "role": "user",
                     "content": contents
                 }
-            ]
+            ],
+            "max_tokens":1000
         }
 
         # 6. Tembak langsung ke Endpoint Resmi OpenRouter
