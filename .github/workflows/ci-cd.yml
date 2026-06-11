@@ -2,10 +2,9 @@ name: FarmAssist AI CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ] # Pipeline jalan otomatis setiap kamu melakukan git push ke branch main
+    branches: [ main ]
 
 jobs:
-  # KITA JADIKAN SATU JALUR BIAR FILE SHARING ANTAR TAHAP JAUH LEBIH MUDAH
   build-test-deploy:
     runs-on: ubuntu-latest
     steps:
@@ -34,20 +33,16 @@ jobs:
 
     - name: Build and Push Docker Images
       run: |
-        # Build & Push Image Frontend
         docker build -t ${{ secrets.DOCKER_USERNAME }}/farmassist_frontend:latest ./nginx
         docker push ${{ secrets.DOCKER_USERNAME }}/farmassist_frontend:latest
 
-        # Build & Push Image Backend
         docker build -t ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest .
         docker push ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest
 
-    # 🟢 TAHAP EMAS 1: Paketkan dan kompres image backend langsung DI DALAM SERVER GITHUB
     - name: Create Compressed Backend Tarball on GitHub Runner
       run: |
         docker save ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest | gzip > farmassist_backend.tar.gz
 
-    # 🟢 TAHAP EMAS 2: Kirim file tar.gz yang super ringan dari GitHub langsung ke folder home Frontend EC2
     - name: Copy Tarball to Frontend EC2 via SCP
       uses: appleboy/scp-action@v0.1.4
       with:
@@ -57,7 +52,6 @@ jobs:
         source: "farmassist_backend.tar.gz"
         target: "/home/ubuntu/"
 
-    # TAHAP EMAS 3: Eksekusi sisa deployment lewat SSH tanpa menyentuh storage Frontend lagi
     - name: Deploy via SSH Jump to Frontend & Backend
       uses: appleboy/ssh-action@v0.1.10
       with:
@@ -65,7 +59,7 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVAT_KEY }}
         script: |
-          set -e  # Mode pipa jujur
+          set -e
 
           echo "==== DIMULAI: PROSES DEPLOYMENT DI FRONTEND ===="
           cd ~/awan-flask-uas
@@ -78,9 +72,7 @@ jobs:
           sudo docker compose up -d frontend
 
           echo "==== TRANSFER IMAGE BACKEND LEWAT INTERNAL VPC PEERING ===="
-          # 🔥 KITA TIDAK PERLU LAGI JALANKAN DOCKER PULL BACKEND DI SINI! (Storage Frontend aman dari mampet)
-          
-          # Lempar langsung file kiriman dari GitHub yang sudah nangkring di folder home Frontend ke Backend privat
+          # 🟢 FIX MANTAP: Mengambil file ber-alamat tepat dari folder home utama (~/)
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ~/farmassist_backend.tar.gz ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
@@ -96,6 +88,5 @@ jobs:
           rm -f ~/farmassist_backend.tar.gz && \
           sudo docker compose up -d --force-recreate backend db"
 
-          # Bersihkan file kompresi kiriman di Frontend agar storage tetap lega
           rm -f ~/farmassist_backend.tar.gz
           echo "==== CI/CD PIPELINE SUKSES: SELURUH SISTEM TERLEPAS SECARA OTOMATIS! ===="
