@@ -34,9 +34,12 @@
                 {% if consultation.image_url %}
                 <h6 class="text-muted mt-4 mb-2">Foto Tanaman:</h6>
                 <div class="text-center bg-light p-2 rounded border">
-                    <!-- Note: In a real app we need a route to serve uploaded files -->
-                    <!-- For simplicity, assume uploads is served via a static route or similar if configured in app.py -->
-                    <span class="badge bg-secondary">File ID: {{ consultation.image_url }}</span>
+                    {% if consultation.image_url.startswith('http') %}
+                        <img src="{{ consultation.image_url }}" alt="Foto Tanaman" class="img-fluid rounded" style="max-height: 300px; object-fit: contain;">
+                    {% else %}
+                        <span class="badge bg-secondary">File ID: {{ consultation.image_url }}</span>
+                        <br><small class="text-muted">Gambar versi lama (penyimpanan lokal)</small>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
