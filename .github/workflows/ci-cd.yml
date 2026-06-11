@@ -42,7 +42,7 @@ jobs:
         docker build -t ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest .
         docker push ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest
 
-  # TAHAP 5: DEPLOY OTOMATIS (Menerobos Jalur Multi-VPC AWS)
+  # TAHAP 5: DEPLOY OTOMATIS VIA JUMP HOST (Menggunakan Kompresi Gzip)
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
@@ -54,16 +54,14 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVAT_KEY }}
         script: |
-          set -e  # 🟢 SEKARANG PIPELINE JUJUR: Jika ada satu baris eror, langsung gagalkan (warna merah)
+          set -e  # Mode pipa jujur: jika ada satu baris eror, langsung gagalkan (warna merah)
 
           echo "==== DIMULAI: PROSES DEPLOYMENT DI FRONTEND ===="
           cd ~/awan-flask-uas
           git pull origin main
 
-          # Login ke Docker Hub di server Frontend
           echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-          # Tarik image frontend baru dan nyalakan ulang secara paksa
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/farmassist_frontend:latest
           sudo docker compose up -d --build frontend
 
@@ -71,12 +69,15 @@ jobs:
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest
           sudo docker tag ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest farmassist_backend_image:latest
 
-          # Bungkus menjadi tar archive dan lempar via SCP ke Backend privat
-          sudo docker save -o farmassist_backend.tar farmassist_backend_image:latest
-          sudo chown ubuntu:ubuntu farmassist_backend.tar
-          scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem farmassist_backend.tar ubuntu@${{ secrets.BACKEND_IP }}:~/
+          # 🟢 OPTIMASI: Kompres langsung ke .tar.gz (Ukuran menyusut 60%+, hemat disk Frontend!)
+          sudo docker save farmassist_backend_image:latest | gzip > farmassist_backend.tar.gz
+          sudo chown ubuntu:ubuntu farmassist_backend.tar.gz
+          
+          # Lempar file kompresi .tar.gz yang super ringan ke Backend privat
+          scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem farmassist_backend.tar.gz ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
+          # 🟢 OPTIMASI: Ekstrak langsung di udara saat load (gunzip -c) agar hemat space di server Backend
           ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
           touch .env && \
           sed -i '/R2_/d' .env && \
@@ -85,9 +86,10 @@ jobs:
           echo 'R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}' >> .env && \
           echo 'R2_BUCKET_NAME=${{ secrets.R2_BUCKET_NAME }}' >> .env && \
           echo 'R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}' >> .env && \
-          sudo docker load -i ~/farmassist_backend.tar && \
+          gunzip -c ~/farmassist_backend.tar.gz | sudo docker load && \
+          rm -f ~/farmassist_backend.tar.gz && \
           sudo docker compose up -d --force-recreate"
 
-          # Bersihkan file tar sisa di Frontend
-          rm -f farmassist_backend.tar
+          # Bersihkan file kompresi sisa di Frontend
+          rm -f farmassist_backend.tar.gz
           echo "==== CI/CD PIPELINE SUKSES: SELURUH SISTEM TERLEPAS SECARA OTOMATIS! ===="
