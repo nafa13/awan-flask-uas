@@ -45,12 +45,29 @@ def consult():
         local_file_path = None
         
         if image and allowed_file(image.filename):
-            # Abstraksi Storage Service
-            # Saat ini masih lokal, nantinya bisa di-switch ke GCPStorageService()
-            storage_service = LocalStorageService(current_app.config['UPLOAD_FOLDER'])
-            saved_filename = storage_service.save_file(image)
-            image_url = saved_filename
-            local_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], saved_filename)
+            # Menggunakan Object Storage R2
+            from services.storage_service import CloudflareR2StorageService
+            try:
+                storage_service = CloudflareR2StorageService()
+                
+                # Boto3 upload_fileobj requires the stream to be at position 0
+                image.seek(0)
+                image_url = storage_service.save_file(image)
+                
+                # Gemini needs local file or Google Drive URL in its basic form
+                # If Gemini AI Service in our code requires a local file path,
+                # we have to save it locally too just for analysis, or modify ai_service.
+                # Currently our ai_service relies on local_file_path for Gemini.
+                # So we keep the local save as well for AI processing.
+                local_storage = LocalStorageService(current_app.config['UPLOAD_FOLDER'])
+                image.seek(0) # Reset stream again for local save
+                saved_filename = local_storage.save_file(image)
+                local_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], saved_filename)
+                
+            except Exception as e:
+                current_app.logger.error(f"Storage Error: {str(e)}")
+                flash('Gagal mengunggah gambar ke Object Storage.', 'danger')
+                return redirect(url_for('user.consult'))
             
         # Panggil AI Service Abstraction
         MonitoringService.log_event("AIConsultationRequest", {"user_id": current_user.id, "plant_name": plant_name})

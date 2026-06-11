@@ -75,7 +75,15 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem farmassist_backend.tar ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
-          ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "sudo docker load -i ~/farmassist_backend.tar && cd ~/awan-flask-uas && git pull origin main && sudo docker compose up -d"
+          ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
+          sed -i '/R2_/d' .env && \
+          echo 'R2_ENDPOINT=${{ secrets.R2_ENDPOINT }}' >> .env && \
+          echo 'R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}' >> .env && \
+          echo 'R2_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_ACCESS_KEY }}' >> .env && \
+          echo 'R2_BUCKET_NAME=${{ secrets.R2_BUCKET_NAME }}' >> .env && \
+          echo 'R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}' >> .env && \
+          sudo docker load -i ~/farmassist_backend.tar && \
+          sudo docker compose up -d"
 
           # Bersihkan file tar sisa di Frontend
           rm -f farmassist_backend.tar
