@@ -18,6 +18,8 @@ services:
     build: .
     image: farmassist_backend_image:latest
     container_name: farmassist_backend
+    ports:
+      - "5000:5000"
     environment:
       - SECRET_KEY=super-secret-key-for-farmassist
       - DATABASE_URL=mysql+pymysql://root:rootpassword@db:3306/farmassist_db
