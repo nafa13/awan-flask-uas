@@ -72,10 +72,10 @@ jobs:
           sudo docker compose up -d frontend
 
           echo "==== TRANSFER IMAGE BACKEND LEWAT INTERNAL VPC PEERING ===="
-          # 🟢 FIX MANTAP: Mengambil file ber-alamat tepat dari folder home utama (~/)
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ~/farmassist_backend.tar.gz ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
+          # 🟢 FIX FINAL: Ditambahkan perintah 'docker tag' setelah load agar namanya sinkron dengan docker-compose.yml
           ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
           touch .env && \
           sed -i '/R2_/d' .env && \
@@ -85,6 +85,7 @@ jobs:
           echo 'R2_BUCKET_NAME=${{ secrets.R2_BUCKET_NAME }}' >> .env && \
           echo 'R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}' >> .env && \
           gunzip -c ~/farmassist_backend.tar.gz | sudo docker load && \
+          sudo docker tag ${{ secrets.DOCKER_USERNAME }}/farmassist_backend:latest farmassist_backend_image:latest && \
           rm -f ~/farmassist_backend.tar.gz && \
           sudo docker compose up -d --force-recreate backend db"
 
