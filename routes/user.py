@@ -93,3 +93,18 @@ def detail(consultation_id):
         return redirect(url_for('user.dashboard'))
         
     return render_template('user/detail.html', consultation=consultation)
+
+@user_bp.route('/consultation/<int:consultation_id>/delete', methods=['POST'])
+@login_required
+def delete(consultation_id):
+    consultation = ConsultationRepository.get_by_id(consultation_id)
+    
+    # Validasi kepemilikan
+    if consultation.user_id != current_user.id and current_user.role != 'admin':
+        MonitoringService.log_error(f"Unauthorized delete attempt by user_id: {current_user.id} to consultation_id: {consultation_id}")
+        flash('Anda tidak memiliki akses untuk menghapus konsultasi ini.', 'danger')
+        return redirect(url_for('user.history'))
+        
+    ConsultationRepository.delete(consultation)
+    flash('Riwayat konsultasi berhasil dihapus.', 'success')
+    return redirect(url_for('user.history'))

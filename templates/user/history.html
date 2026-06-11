@@ -26,9 +26,16 @@
                         <td class="align-middle fw-bold">{{ item.plant_name }}</td>
                         <td class="align-middle">{{ item.symptoms[:80] }}{% if item.symptoms|length > 80 %}...{% endif %}</td>
                         <td class="align-middle text-center">
-                            <a href="{{ url_for('user.detail', consultation_id=item.id) }}" class="btn btn-sm btn-outline-success">
-                                <i class="fa-solid fa-eye"></i> Detail Hasil AI
-                            </a>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('user.detail', consultation_id=item.id) }}" class="btn btn-sm btn-outline-success">
+                                    <i class="fa-solid fa-eye"></i> Detail
+                                </a>
+                                <form action="{{ url_for('user.delete', consultation_id=item.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat ini?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fa-solid fa-trash"></i> Hapus
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% else %}

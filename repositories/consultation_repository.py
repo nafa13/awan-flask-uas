@@ -38,3 +38,8 @@ class ConsultationRepository:
         db.session.add(consultation)
         db.session.commit()
         return consultation
+
+    @staticmethod
+    def delete(consultation):
+        db.session.delete(consultation)
+        db.session.commit()
