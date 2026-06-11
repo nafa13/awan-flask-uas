@@ -52,7 +52,7 @@ Gejala: {symptoms}"""
         }
 
         payload = {
-            "model": "google/gemini-2.5-flash", # Kamu bisa pakai gemini-2.5-flash atau google/gemini-1.5-flash
+            "model": "google/gemini-2.5-flash:free",
             "messages": [
                 {
                     "role": "user",
