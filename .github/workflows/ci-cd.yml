@@ -77,7 +77,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem farmassist_backend.tar.gz ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
-          # 🟢 OPTIMASI: Ekstrak langsung di udara saat load (gunzip -c) agar hemat space di server Backend
+          # 🟢 FIX UJUNG SCRIPT: Ditambahkan 'backend db' di akhir compose up agar server privat fokus merakit cluster internal saja
           ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
           touch .env && \
           sed -i '/R2_/d' .env && \
@@ -88,7 +88,7 @@ jobs:
           echo 'R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}' >> .env && \
           gunzip -c ~/farmassist_backend.tar.gz | sudo docker load && \
           rm -f ~/farmassist_backend.tar.gz && \
-          sudo docker compose up -d --force-recreate"
+          sudo docker compose up -d --force-recreate backend db"
 
           # Bersihkan file kompresi sisa di Frontend
           rm -f farmassist_backend.tar.gz

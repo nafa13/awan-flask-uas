@@ -1,22 +1,20 @@
 version: '3.8'
 
 services:
-  # 1. FRONTEND TIER (NGINX)
+  # 1. FRONTEND TIER (Hanya berjalan di Server Frontend EC2)
   frontend:
     build: ./nginx
     image: farmassist_frontend_image:latest
     container_name: farmassist_frontend
     ports:
       - "80:80"
-    depends_on:
-      - backend
+    # 🟢 FIX: depends_on ke backend DIHAPUS biar Server Frontend tidak ikut menarik image BE & DB
     networks:
       - public_net
 
-  # 2. BACKEND/APP TIER (FLASK)
+  # 2. BACKEND/APP TIER (Hanya berjalan di Server Backend Privat EC2)
   backend:
-    build: .
-    image: farmassist_backend_image:latest
+    image: farmassist_backend_image:latest # 🟢 FIX: Menggunakan image hasil load .tar oleh CI/CD
     container_name: farmassist_backend
     ports:
       - "5000:5000"
@@ -38,7 +36,7 @@ services:
       - public_net
       - private_net
 
-  # 3. DATABASE TIER (MYSQL)
+  # 3. DATABASE TIER (Hanya berjalan di Server Backend Privat EC2)
   db:
     image: mysql:8.0
     container_name: farmassist_db
@@ -60,7 +58,7 @@ networks:
     driver: bridge
   private_net:
     driver: bridge
-    internal: true # Hanya bisa diakses oleh kontainer di jaringan ini (Backend & DB)
+    internal: true 
 
 volumes:
   db_data:
