@@ -1,9 +1,59 @@
 version: '3.8'
 
 services:
+  # 1. FRONTEND TIER (NGINX)
   frontend:
     build: ./nginx
+    image: farmassist_frontend_image:latest
     container_name: farmassist_frontend
     ports:
       - "80:80"
-    restart: unless-stopped
+    depends_on:
+      - backend
+    networks:
+      - public_net
+
+  # 2. BACKEND/APP TIER (FLASK)
+  backend:
+    build: .
+    image: farmassist_backend_image:latest
+    container_name: farmassist_backend
+    environment:
+      - SECRET_KEY=super-secret-key-for-farmassist
+      - DATABASE_URL=mysql+pymysql://root:rootpassword@db:3306/farmassist_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - public_net
+      - private_net
+
+  # 3. DATABASE TIER (MYSQL)
+  db:
+    image: mysql:8.0
+    container_name: farmassist_db
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=farmassist_db
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - private_net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  public_net:
+    driver: bridge
+  private_net:
+    driver: bridge
+    internal: true # Hanya bisa diakses oleh kontainer di jaringan ini (Backend & DB)
+
+volumes:
+  db_data:
