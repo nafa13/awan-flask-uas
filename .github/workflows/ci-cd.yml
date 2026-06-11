@@ -54,6 +54,8 @@ jobs:
         username: ubuntu
         key: ${{ secrets.SSH_PRIVAT_KEY }}
         script: |
+          set -e  # 🟢 SEKARANG PIPELINE JUJUR: Jika ada satu baris eror, langsung gagalkan (warna merah)
+
           echo "==== DIMULAI: PROSES DEPLOYMENT DI FRONTEND ===="
           cd ~/awan-flask-uas
           git pull origin main
@@ -75,7 +77,6 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem farmassist_backend.tar ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
-          # 🟢 FIX: Ditambahkan 'touch .env' agar sed tidak mogok kerja, dan '--force-recreate' agar teks frontend/backend langsung berubah live
           ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
           touch .env && \
           sed -i '/R2_/d' .env && \
