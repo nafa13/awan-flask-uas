@@ -63,6 +63,7 @@ Gejala: {symptoms}"""
         }
 
         # 6. Tembak langsung ke Endpoint Resmi OpenRouter
+        # 6. Tembak langsung ke Endpoint Resmi OpenRouter
         try:
             response = requests.post(
                 "https://openrouter.ai/api/v1/chat/completions",
@@ -73,7 +74,14 @@ Gejala: {symptoms}"""
             
             res_json = response.json()
             if response.status_code == 200:
-                return res_json['choices'][0]['message']['content']
+                # 🟢 FIX MANTEP: Cek dulu apakah 'choices' beneran ada di dalam JSON
+                if 'choices' in res_json:
+                    return res_json['choices'][0]['message']['content']
+                elif 'error' in res_json:
+                    # Jika OpenRouter menyelundupkan eror di dalam status 200
+                    return f"OpenRouter Error: {res_json['error'].get('message')}"
+                else:
+                    return f"Format JSON tidak dikenal: {json.dumps(res_json)}"
             else:
                 error_msg = res_json.get('error', {}).get('message', 'Terjadi kesalahan internal pada OpenRouter.')
                 return f"OpenRouter Error ({response.status_code}): {error_msg}"
