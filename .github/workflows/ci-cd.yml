@@ -52,7 +52,7 @@ jobs:
       with:
         host: ${{ secrets.FRONTEND_IP }}
         username: ubuntu
-        key: ${{ secrets.SSH_PRIVAT_KEY }}    # 🟢 FIX: Sudah disesuaikan dengan typo 'PRIVAT' di GitHub kamu
+        key: ${{ secrets.SSH_PRIVAT_KEY }}
         script: |
           echo "==== DIMULAI: PROSES DEPLOYMENT DI FRONTEND ===="
           cd ~/awan-flask-uas
@@ -61,7 +61,7 @@ jobs:
           # Login ke Docker Hub di server Frontend
           echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-          # Tarik image frontend baru dan nyalakan ulang
+          # Tarik image frontend baru dan nyalakan ulang secara paksa
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/farmassist_frontend:latest
           sudo docker compose up -d --build frontend
 
@@ -75,7 +75,9 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem farmassist_backend.tar ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
+          # 🟢 FIX: Ditambahkan 'touch .env' agar sed tidak mogok kerja, dan '--force-recreate' agar teks frontend/backend langsung berubah live
           ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
+          touch .env && \
           sed -i '/R2_/d' .env && \
           echo 'R2_ENDPOINT=${{ secrets.R2_ENDPOINT }}' >> .env && \
           echo 'R2_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY_ID }}' >> .env && \
@@ -83,7 +85,7 @@ jobs:
           echo 'R2_BUCKET_NAME=${{ secrets.R2_BUCKET_NAME }}' >> .env && \
           echo 'R2_PUBLIC_URL=${{ secrets.R2_PUBLIC_URL }}' >> .env && \
           sudo docker load -i ~/farmassist_backend.tar && \
-          sudo docker compose up -d"
+          sudo docker compose up -d --force-recreate"
 
           # Bersihkan file tar sisa di Frontend
           rm -f farmassist_backend.tar
