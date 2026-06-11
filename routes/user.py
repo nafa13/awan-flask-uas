@@ -47,20 +47,20 @@ def consult():
         if image and allowed_file(image.filename):
             # Menggunakan Object Storage R2
             from services.storage_service import CloudflareR2StorageService
+            import io
             try:
                 storage_service = CloudflareR2StorageService()
+                local_storage = LocalStorageService(current_app.config['UPLOAD_FOLDER'])
                 
-                # Boto3 upload_fileobj requires the stream to be at position 0
-                image.seek(0)
+                # Membaca data ke memori karena boto3 upload_fileobj akan menutup stream
+                file_data = image.read()
+                
+                # Upload ke Cloudflare R2
+                image.stream = io.BytesIO(file_data)
                 image_url = storage_service.save_file(image)
                 
-                # Gemini needs local file or Google Drive URL in its basic form
-                # If Gemini AI Service in our code requires a local file path,
-                # we have to save it locally too just for analysis, or modify ai_service.
-                # Currently our ai_service relies on local_file_path for Gemini.
-                # So we keep the local save as well for AI processing.
-                local_storage = LocalStorageService(current_app.config['UPLOAD_FOLDER'])
-                image.seek(0) # Reset stream again for local save
+                # Simpan secara lokal untuk Gemini AI Service
+                image.stream = io.BytesIO(file_data)
                 saved_filename = local_storage.save_file(image)
                 local_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], saved_filename)
                 
