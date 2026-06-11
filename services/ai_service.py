@@ -1,18 +1,18 @@
 import os
-import google.generativeai as genai
+import base64
+import json
+import requests
 from flask import current_app
-from PIL import Image
 
 class GeminiAIService:
     @staticmethod
     def analyze_plant(plant_name, symptoms, image_path=None):
+        # 1. Ambil API Key OpenRouter dari konfigurasi aplikasi (.env)
         api_key = current_app.config.get('GEMINI_API_KEY')
-        if not api_key or api_key == 'your_gemini_api_key_here':
-            return "Error: Gemini API Key belum dikonfigurasi. Silakan periksa file .env."
+        if not api_key:
+            return "Error: API Key OpenRouter belum dikonfigurasi. Silakan periksa file .env."
         
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
+        # 2. Rancang template prompt analisis tanaman
         prompt = f"""Kamu adalah pakar pertanian profesional. Analisis gejala tanaman berikut dan berikan:
 1. Kemungkinan penyakit
 2. Tingkat keparahan
@@ -23,13 +23,59 @@ class GeminiAIService:
 Nama Tanaman: {plant_name}
 Gejala: {symptoms}"""
 
-        try:
-            if image_path and os.path.exists(image_path):
-                img = Image.open(image_path)
-                response = model.generate_content([prompt, img])
-            else:
-                response = model.generate_content(prompt)
+        # 3. Susun struktur konten pesan (Default teks)
+        contents = [{"type": "text", "text": prompt}]
+
+        # 4. Jika pengguna mengunggah gambar, ubah ke Base64 sesuai standar OpenRouter
+        if image_path and os.path.exists(image_path):
+            try:
+                with open(image_path, "rb") as img_file:
+                    base64_image = base64.b64encode(img_file.read()).decode('utf-8')
                 
-            return response.text
+                # Deteksi ekstensi gambar untuk penentuan MIME type
+                ext = os.path.splitext(image_path)[1].lower().replace('.', '')
+                mime_type = f"image/{ext}" if ext in ['jpg', 'jpeg', 'png', 'webp'] else "image/jpeg"
+                
+                contents.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:{mime_type};base64,{base64_image}"
+                    }
+                })
+            except Exception as e:
+                return f"Gagal memproses lampiran gambar: {str(e)}"
+
+        # 5. Konfigurasi Header & Payload OpenRouter
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+
+        payload = {
+            "model": "google/gemini-2.5-flash", # Kamu bisa pakai gemini-2.5-flash atau google/gemini-1.5-flash
+            "messages": [
+                {
+                    "role": "user",
+                    "content": contents
+                }
+            ]
+        }
+
+        # 6. Tembak langsung ke Endpoint Resmi OpenRouter
+        try:
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                data=json.dumps(payload),
+                timeout=30
+            )
+            
+            res_json = response.json()
+            if response.status_code == 200:
+                return res_json['choices'][0]['message']['content']
+            else:
+                error_msg = res_json.get('error', {}).get('message', 'Terjadi kesalahan internal pada OpenRouter.')
+                return f"OpenRouter Error ({response.status_code}): {error_msg}"
+                
         except Exception as e:
             return f"Terjadi kesalahan saat menghubungi layanan AI: {str(e)}"
