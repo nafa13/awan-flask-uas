@@ -52,7 +52,7 @@ Gejala: {symptoms}"""
         }
 
         payload = {
-            "model": "google/gemini-2.5-flash:free",
+            "model": "google/gemini-1.5-flash:free",
             "messages": [
                 {
                     "role": "user",
