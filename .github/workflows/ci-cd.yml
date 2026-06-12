@@ -75,8 +75,10 @@ jobs:
           scp -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ~/farmassist_backend.tar.gz ubuntu@${{ secrets.BACKEND_IP }}:~/
 
           echo "==== DIMULAI: PROSES RESTART DI BACKEND PRIVAT ===="
-          # 🟢 FIX MANTEP: Ditambahkan sed & echo GEMINI_API_KEY untuk menyuntikkan token OpenRouter sk-or-v1
+          # 🟢 FIX MANTEP: Docker Compose Down & System Prune otomatis disuntikkan di awal agar disk tidak tersendat (No Space Left)
           ssh -o StrictHostKeyChecking=no -i ~/key-jejaktani.pem ubuntu@${{ secrets.BACKEND_IP }} "cd ~/awan-flask-uas && git pull origin main && \
+          sudo docker compose down && \
+          sudo docker system prune -f && \
           touch .env && \
           sed -i '/R2_/d' .env && \
           sed -i '/GEMINI_/d' .env && \
